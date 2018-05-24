@@ -6,6 +6,8 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const expressValidator = require('express-validator');
 const flash = require('connect-flash'); 
+const passport = require('passport');
+const config = require('./config/database');
 
 // Initialize App
 const app = express();
@@ -49,8 +51,20 @@ app.use(expressValidator({
     }
 }));
 
+// Passport Config
+require('./config/passport')(passport);
+
+// Passport Middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get('*', (req, res, next) => {
+    res.locals.user = req.user || null;
+    next();
+});
+
 // Connect to Database
-mongoose.connect('mongodb://localhost/nodekb');
+mongoose.connect(config.database);
 let db = mongoose.connection;
 
 // Check DB Connection
@@ -91,9 +105,11 @@ app.get('/', (req, res) => {
 
 // Route Files
 let articles = require('./routes/articles');
+let users = require('./routes/users');
 app.use('/articles', articles);
+app.use('/users', users);
 
 // Start Server
 app.listen(3000, () => {
     console.log('Now listening on port 3000');
-}) 
+}); 
