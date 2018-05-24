@@ -78,7 +78,9 @@ router.post('/login', (req, res, next) => {
 
 // Logout Route
 router.get('/logout', (req, res) => {
-
+    req.logout();
+    req.flash('success', 'You have been logged out');
+    res.redirect('/users/login');
 });
 
 module.exports = router;
