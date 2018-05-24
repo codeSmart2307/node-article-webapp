@@ -1,11 +1,24 @@
 const express = require('express');
 const router = express.Router();
+const passport = require('passport');
 
 // Load Models
 let Article = require('../models/article');
+let User = require('../models/user');
+
+//Access Control
+function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    else {
+        req.flash('danger', 'Please login');
+        res.redirect('/users/login'); 
+    }
+}
 
 // Add Route
-router.get('/', (req, res) => {
+router.get('/', ensureAuthenticated, (req, res) => {
     res.render('add_article', {
         title: 'Add Article | Knowledge Base',
         header: 'Add Articles'
@@ -15,7 +28,7 @@ router.get('/', (req, res) => {
 // Add Submit POST Route
 router.post('/', (req, res) => {
     req.checkBody('title', 'Title is required').notEmpty();
-    req.checkBody('author', 'Author is required').notEmpty();
+    // req.checkBody('author', 'Author is required').notEmpty();
     req.checkBody('body', 'Body is required').notEmpty();
 
     // Get Errors
@@ -30,7 +43,7 @@ router.post('/', (req, res) => {
     else {
         let article = new Article({
             title: req.body.title,
-            author: req.body.author,
+            author: req.user._id,
             body: req.body.body
         });
     
@@ -53,26 +66,34 @@ router.get('/:id', (req, res) => {
             console.log(err);
         }
         else {
-            res.render('article', {                
-                article: article
-            });
-            return;
+            User.findById(article.author, (err, user) => {
+                res.render('article', {                
+                    article: article,
+                    author: user.name
+                });
+            });           
         }
     });
 });
 
 // Edit article
-router.get('/edit/:id', (req, res) => {
-    Article.findById(req.params.id, (err, article) => {
+router.get('/edit/:id', ensureAuthenticated, (req, res) => {
+    Article.findById(req.params.id, (err, article) => {        
         if (err) {
             console.log(err);
         }
         else {
-            res.render('edit_article', {
-                title: 'Edit Article | Knowledge Base',
-                article: article
-            });
-            return;
+            if (article.author != req.user._id) {
+                req.flash('danger', 'Not authorized');
+                res.redirect('/');
+            }
+            else {
+                res.render('edit_article', {
+                    title: 'Edit Article | Knowledge Base',
+                    article: article
+                });
+                return;
+            }            
         }        
     });
 });

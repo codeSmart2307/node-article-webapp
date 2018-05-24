@@ -15,8 +15,9 @@ html
                         a.nav-link(href='/')
                             | Home 
                         span.sr-only (current)
-                    li.nav-item
-                        a.nav-link(href='/articles') Add Article   
+                        if user
+                            li.nav-item
+                                a.nav-link(href='/articles') Add Article   
                 ul.nav.navbar-nav.navbar-right
                     if user
                         li.nav-item 
@@ -33,10 +34,11 @@ html
                 each error, i in errors
                     div(class="alert alert-danger") #{error.msg}
             block content
-            br
-            hr
-            footer  
-            p Copyright &copy; 2018
+            br 
+            hr           
+        footer.footer            
+            .container
+                span.text-muted Copyright &copy; 2018                    
         script(src="/bower_components/jquery/dist/jquery.js")
         script(src="/bower_components/bootstrap/dist/js/bootstrap.js")
         script(src="/js/main.js")
